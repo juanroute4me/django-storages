@@ -82,6 +82,7 @@ class GoogleCloudStorage(Storage):
     project_id = setting('GS_PROJECT_ID', None)
     credentials = setting('GS_CREDENTIALS', None)
     bucket_name = setting('GS_BUCKET_NAME', None)
+    public_blob = setting('GS_PUBLIC_BLOB', None)
     auto_create_bucket = setting('GS_AUTO_CREATE_BUCKET', False)
     auto_create_acl = setting('GS_AUTO_CREATE_ACL', 'projectPrivate')
     file_name_charset = setting('GS_FILE_NAME_CHARSET', 'utf-8')
@@ -155,9 +156,11 @@ class GoogleCloudStorage(Storage):
 
         content.name = cleaned_name
         encoded_name = self._encode_name(name)
-        file = GoogleCloudFile(encoded_name, 'rw', self)
-        file.blob.upload_from_file(content, size=content.size,
-                                   content_type=file.mime_type)
+        gcloud_file = GoogleCloudFile(encoded_name, 'rw', self)
+        gcloud_file.blob.upload_from_file(content, size=content.size,
+                                          content_type=gcloud_file.mime_type)
+        if self.public_blob:
+            gcloud_file.blob.make_public()
         return cleaned_name
 
     def delete(self, name):
